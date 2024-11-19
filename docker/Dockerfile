@@ -8,7 +8,7 @@ ENV GOPRIVATE=github.com/Netcracker \
 
 WORKDIR /workspace
 
-# Copy the Go Modules manifests
+# Copy the Go Modules manifests.
 COPY go.mod go.mod
 COPY go.sum go.sum
 
