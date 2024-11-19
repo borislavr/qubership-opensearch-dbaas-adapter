@@ -12,6 +12,8 @@ WORKDIR /workspace
 COPY go.mod go.mod
 COPY go.sum go.sum
 
+RUN apk add --no-cache git
+
 RUN git config --global url."https://${GH_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
 
 # cache deps before building and copying source so that we don't need to re-download as much
