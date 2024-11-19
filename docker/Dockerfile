@@ -6,6 +6,8 @@ ENV GOPRIVATE=github.com/Netcracker \
     GO111MODULE=on \
     ELASTIC_HOST=172.28.0.2
 
+ARG GH_ACCESS_TOKEN
+
 WORKDIR /workspace
 
 # Copy the Go Modules manifests.
