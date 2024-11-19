@@ -22,7 +22,7 @@ RUN git config --global url."https://${GH_ACCESS_TOKEN}@github.com/".insteadOf "
 # and so that source changes don't invalidate our downloaded layer
 RUN go mod download
 
-RUN go mo tidy
+RUN go mod tidy
 
 # Copy the go source
 COPY api api
