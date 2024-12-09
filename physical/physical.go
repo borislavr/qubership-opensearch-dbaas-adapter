@@ -161,7 +161,15 @@ func (rs *RegistrationProvider) prepareRequestParameters(ctx context.Context) (s
 func (rs *RegistrationProvider) modifyReqParams(request *dao.PhysicalDatabaseRegistrationRequest) {
 	if rs.ApiVersion == common.ApiV2 {
 		request.Metadata = dao.Metadata{
-			ApiVersion:     dao.ApiVersion(rs.ApiVersion),
+			ApiVersion: dao.ApiVersion(rs.ApiVersion),
+			ApiVersions: dao.ApiVersions{Specs: []dao.ApiVersionsSpec{
+				{
+					SpecRootUrl:     dao.RootUrl,
+					Major:           dao.MajorAPIVersion,
+					Minor:           dao.MinorAPIVersion,
+					SupportedMajors: dao.SupportedMajorsVersions,
+				},
+			}},
 			SupportedRoles: rs.baseProvider.GetSupportedRoleTypes(),
 			Features: map[string]bool{
 				"multiusers": true,

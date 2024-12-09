@@ -115,6 +115,10 @@ func Handlers(adapter common.Component) http.Handler {
 		handlers.LoggingHandler(os.Stdout, authorizer(backupProvider.RestoreBackupHandler(opensearchRepo, basePath))),
 	).Methods(http.MethodPost)
 
+	r.Handle(fmt.Sprintf("%s/backups/{backupID}/restoration", basePath),
+		handlers.LoggingHandler(os.Stdout, authorizer(backupProvider.RestorationBackupHandler(opensearchRepo, basePath))),
+	).Methods(http.MethodPost)
+
 	r.Handle(fmt.Sprintf("%s/backups/track/backup/{backupID}", basePath),
 		handlers.LoggingHandler(os.Stdout, authorizer(backupProvider.TrackBackupHandler())),
 	).Methods(http.MethodGet)
