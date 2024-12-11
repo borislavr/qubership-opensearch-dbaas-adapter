@@ -26,7 +26,7 @@ func TestRegistration(t *testing.T) {
 		testServer.URL,
 		dao.BasicAuth{
 			Username: "cluster-dba",
-			Password: "Bnmq5567_PO",
+			Password: "test",
 		},
 		"",
 		nil,
@@ -60,7 +60,7 @@ func TestFailedRegistration(t *testing.T) {
 		testServer.URL,
 		dao.BasicAuth{
 			Username: "cluster-dba",
-			Password: "Bnmq5567_PO",
+			Password: "test",
 		},
 		"",
 		nil,

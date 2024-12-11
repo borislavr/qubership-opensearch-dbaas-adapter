@@ -651,7 +651,7 @@ This API requests to collect backup for specified database prefixes.
 Request:
 
 ```
-curl -u <username>:<password> -XPOST http://dbaas-opensearch-adapter:8080/api/v1/dbaas/adapter/opensearch/backups/collect -d'["db1"]'
+curl -u <username>:<password> -XPOST http://dbaas-opensearch-adapter:8080/api/v1/dbaas/adapter/opensearch/backups/collect -d '["db1"]'
 ```
 
 Response:

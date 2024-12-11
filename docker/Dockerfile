@@ -3,8 +3,7 @@ FROM golang:1.22.5-alpine3.20 as builder
 ENV GOPRIVATE=github.com/Netcracker \
     GOSUMDB=off \
     CGO_ENABLED=0 \
-    GO111MODULE=on \
-    ELASTIC_HOST=172.28.0.2
+    GO111MODULE=on
 
 ARG GH_ACCESS_TOKEN
 

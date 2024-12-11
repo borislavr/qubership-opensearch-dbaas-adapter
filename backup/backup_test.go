@@ -48,15 +48,6 @@ func TestRestoreBackup(t *testing.T) {
 	assert.Nil(t, restoreInfo)
 }
 
-// Disable renaming test, we're not going to use this functionality until we fix the Users fix
-//func TestRestoreBackupWithRename(t *testing.T) {
-//	dbs := []string{"db1", "db2"}
-//	restoreInfo, err := backupProvider.RestoreBackup("dbaas_1_1", dbs, "snapshots", true)
-//	assert.Nil(t, err)
-//	assert.Regexp(t, regexp.MustCompile("dbaas_.*_a"), restoreInfo["a"])
-//	assert.Regexp(t, regexp.MustCompile("dbaas_.*_b"), restoreInfo["b"])
-//}
-
 func TestRestoreBackupWithEmptyDatabasePrefixes(t *testing.T) {
 	dbs := []string{}
 	restoreInfo, err := backupProvider.RestoreBackup("dbaas_1_1", dbs, "snapshots", false, context.Background())

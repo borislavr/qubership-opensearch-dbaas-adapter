@@ -410,7 +410,6 @@ func (bp BackupProvider) RestoreBackup(backupId string, dbs []string, fromRepo s
 	var err error
 	maxLen := 0
 
-	// We leave this code as is, yet it's not supported currently. It should be fixed after the problem with Users and DB names for DBaaS
 	if regenerateNames {
 		indices, err = bp.getActualIndices(backupId, fromRepo, map[string]string{}, ctx)
 		if err != nil {
@@ -468,7 +467,6 @@ func (bp BackupProvider) RestoreBackup(backupId string, dbs []string, fromRepo s
 			}
 		} else {
 			logger.InfoContext(ctx, "Maximum index name allows to perform bulk restoration")
-			//TODO add recognition of dbaas generated names and prevent name overflow
 			err := bp.requestRestore(
 				ctx,
 				indices,
@@ -604,7 +602,6 @@ func (bp BackupProvider) TrackRestoreIndices(ctx context.Context, backupId strin
 	if foundOneDone {
 		return restoreTrack(backupId, "SUCCESS", changedNameDb)
 	}
-	// this is a possibly dangerous hack
 	return restoreTrack(backupId, "PROCEEDING", changedNameDb)
 }
 
