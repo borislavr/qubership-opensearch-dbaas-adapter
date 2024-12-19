@@ -16,8 +16,8 @@ package basic
 
 import (
 	"fmt"
-	"github.com/Netcracker/dbaas-adapter-core/pkg/dao"
 	"github.com/Netcracker/dbaas-opensearch-adapter/common"
+	"github.com/Netcracker/qubership-dbaas-adapter-core/pkg/dao"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

@@ -27,7 +27,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Netcracker/dbaas-adapter-core/pkg/dao"
+	"github.com/Netcracker/qubership-dbaas-adapter-core/pkg/dao"
 	"github.com/opensearch-project/opensearch-go/opensearchapi"
 	uuid "github.com/satori/go.uuid"
 )

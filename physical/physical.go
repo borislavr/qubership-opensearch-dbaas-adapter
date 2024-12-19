@@ -25,10 +25,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Netcracker/dbaas-adapter-core/pkg/dao"
 	"github.com/Netcracker/dbaas-opensearch-adapter/basic"
 	cl "github.com/Netcracker/dbaas-opensearch-adapter/client"
 	"github.com/Netcracker/dbaas-opensearch-adapter/common"
+	"github.com/Netcracker/qubership-dbaas-adapter-core/pkg/dao"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 

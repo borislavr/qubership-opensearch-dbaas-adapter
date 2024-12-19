@@ -25,10 +25,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Netcracker/dbaas-adapter-core/pkg/dao"
-	core "github.com/Netcracker/dbaas-adapter-core/pkg/utils"
 	"github.com/Netcracker/dbaas-opensearch-adapter/cluster"
 	"github.com/Netcracker/dbaas-opensearch-adapter/common"
+	"github.com/Netcracker/qubership-dbaas-adapter-core/pkg/dao"
+	core "github.com/Netcracker/qubership-dbaas-adapter-core/pkg/utils"
 	"github.com/gorilla/mux"
 	"github.com/opensearch-project/opensearch-go/opensearchapi"
 )

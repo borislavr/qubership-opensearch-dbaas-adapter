@@ -24,9 +24,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Netcracker/dbaas-adapter-core/pkg/dao"
 	"github.com/Netcracker/dbaas-opensearch-adapter/api"
 	"github.com/Netcracker/dbaas-opensearch-adapter/common"
+	"github.com/Netcracker/qubership-dbaas-adapter-core/pkg/dao"
 	"github.com/gorilla/mux"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
