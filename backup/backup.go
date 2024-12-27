@@ -293,8 +293,8 @@ func (bp BackupProvider) RestorationBackupHandler(repo string, basePath string) 
 			return
 		}
 
-		changedNameDb, err := bp.ProcessRestorationRequest(backupID, req, ctx)
-		response := bp.TrackRestore(backupID, ctx, changedNameDb)
+		changedNameDb, err, trackId := bp.ProcessRestorationRequest(backupID, req, ctx)
+		response := bp.TrackRestore(trackId, ctx, changedNameDb)
 		if err != nil {
 			logger.ErrorContext(ctx, "Failed to restore backup", slog.Any("error", err))
 			w.WriteHeader(http.StatusInternalServerError)
@@ -504,30 +504,38 @@ func (bp BackupProvider) RestoreBackup(backupId string, dbs []string, fromRepo s
 	return nil, err
 }
 
-func (bp BackupProvider) ProcessRestorationRequest(backupId string, restorationRequest RestorationRequest, ctx context.Context) (map[string]string, error) {
+func (bp BackupProvider) ProcessRestorationRequest(backupId string, restorationRequest RestorationRequest, ctx context.Context) (map[string]string, error, string) {
 	if len(restorationRequest.Databases) == 0 {
 		logger.ErrorContext(ctx, "Databases to restore are not specified")
-		return nil, errors.New("database to restore are not specified")
+		return nil, errors.New("database to restore are not specified"), ""
 	}
 	var renames, dbs []string
 	var changedDbNames map[string]string
+	prefixes := make(map[string]struct{})
 	for _, dabatase := range restorationRequest.Databases {
 		dbs = append(dbs, fmt.Sprintf(`"%s"`, dabatase.Name))
 		if restorationRequest.RegenerateNames {
 			if dabatase.Prefix != "" {
 				if ok, err := bp.checkPrefixUniqueness(dabatase.Prefix, ctx); ok {
 					if err != nil {
-						return nil, err
+						return nil, err, ""
 					}
 					renames = append(renames, fmt.Sprintf("%s:%s", dabatase.Name, dabatase.Prefix))
 				}
 			} else {
 				prefix, err := core.PrepareDatabaseName(dabatase.Namespace, dabatase.Microservice, 64)
+				if _, ok := prefixes[prefix]; ok {
+					// Make an artificial delay for prefix creation, since it happens too fast
+					// currently we can't include nanoseconds into pattern for prefix creation
+					time.Sleep(1 * time.Millisecond)
+					prefix, err = core.PrepareDatabaseName(dabatase.Namespace, dabatase.Microservice, 64)
+				}
 				if err != nil {
 					logger.ErrorContext(ctx, fmt.Sprintf("Failed to regenerate name for provided database: %v", dabatase), slog.Any("error", err))
-					return nil, err
+					return nil, err, ""
 				}
 				renames = append(renames, fmt.Sprintf("%s:%s", dabatase.Name, prefix))
+				prefixes[prefix] = struct{}{}
 			}
 		}
 	}
@@ -538,19 +546,22 @@ func (bp BackupProvider) ProcessRestorationRequest(backupId string, restorationR
 			changedDbNames[parts[0]] = parts[1]
 		}
 	}
-	err := bp.requestRestoration(ctx, dbs, backupId, renames)
-	return changedDbNames, err
+	err, trackId := bp.requestRestoration(ctx, dbs, backupId, renames)
+	if err != nil {
+		return nil, err, trackId
+	}
+	return changedDbNames, err, trackId
 }
 
-func (bp BackupProvider) TrackRestore(backupId string, ctx context.Context, changedNameDb map[string]string) ActionTrack {
-	logger.InfoContext(ctx, fmt.Sprintf("Request to track '%s' restoration is received", backupId))
-	jobStatus, err := bp.getJobStatus(backupId, ctx)
+func (bp BackupProvider) TrackRestore(trackId string, ctx context.Context, changedNameDb map[string]string) ActionTrack {
+	logger.InfoContext(ctx, fmt.Sprintf("Request to track '%s' restoration is received", trackId))
+	jobStatus, err := bp.getJobStatus(trackId, ctx)
 	if err != nil {
 		logger.ErrorContext(ctx, "Failed to find snapshot", slog.Any("error", err))
-		return backupTrack(backupId, "FAIL")
+		return backupTrack(trackId, "FAIL")
 	}
-	logger.DebugContext(ctx, fmt.Sprintf("'%s' backup status is %s", backupId, jobStatus))
-	return restoreTrack(backupId, jobStatus, changedNameDb)
+	logger.DebugContext(ctx, fmt.Sprintf("'%s' backup status is %s", trackId, jobStatus))
+	return restoreTrack(trackId, jobStatus, changedNameDb)
 }
 func (bp BackupProvider) checkPrefixUniqueness(prefix string, ctx context.Context) (bool, error) {
 	logger.InfoContext(ctx, "Checking user prefix uniqueness during restoration with renaming")
@@ -622,7 +633,8 @@ func (bp BackupProvider) TrackRestoreIndices(ctx context.Context, backupId strin
 func (bp BackupProvider) requestRestore(ctx context.Context, dbs []string, backupId string, pattern, replacement string) error {
 	body := strings.NewReader(fmt.Sprintf(`
 		{
-			"vault": "%s",	
+			"vault": "%s",
+			"skip_users_recovery": "true",		
 			"dbs": ["%s"]
 		%s
 		}		
@@ -638,10 +650,11 @@ func (bp BackupProvider) requestRestore(ctx context.Context, dbs []string, backu
 	return nil
 }
 
-func (bp BackupProvider) requestRestoration(ctx context.Context, dbs []string, backupId string, replacement []string) error {
+func (bp BackupProvider) requestRestoration(ctx context.Context, dbs []string, backupId string, replacement []string) (error, string) {
 	body := strings.NewReader(fmt.Sprintf(`
 		{
-			"vault": "%s",	
+			"vault": "%s",
+			"skip_users_recovery": "true",
 			"dbs": [%s]
 		%s
 		}		
@@ -651,10 +664,17 @@ func (bp BackupProvider) requestRestoration(ctx context.Context, dbs []string, b
 	logger.DebugContext(ctx, fmt.Sprintf("Request body built to restore '%s' backup: %v", backupId, body))
 	response, err := bp.Curator.client.Do(request)
 	if err != nil {
-		return err
+		return err, ""
 	}
-	logger.InfoContext(ctx, fmt.Sprintf("'%s' snapshot restoration is started: %s", backupId, response.Body))
-	return nil
+	defer response.Body.Close()
+	trackId, err := io.ReadAll(response.Body)
+	if err != nil {
+		logger.ErrorContext(ctx, "Error reading body", "error", err)
+		return err, ""
+	}
+
+	logger.InfoContext(ctx, fmt.Sprintf("'%s' snapshot restoration is started: %s", backupId, trackId))
+	return nil, string(trackId)
 }
 
 func (bp BackupProvider) prepareRestoreRequest(ctx context.Context, url string, body io.Reader) *http.Request {

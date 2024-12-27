@@ -101,20 +101,21 @@ func (bp BaseProvider) CreateUserHandler() func(w http.ResponseWriter, r *http.R
 }
 
 func (bp BaseProvider) ensureUser(username string, userCreateRequest dao.UserCreateRequest, ctx context.Context) (*CreatedUser, error) {
-	indexName := userCreateRequest.DbName
+	dbName := userCreateRequest.DbName
 	roleType := userCreateRequest.Role
 	if roleType == "" {
 		roleType = AdminRoleType
 	}
 	username, password, resources, err :=
-		bp.createOrUpdateUser(username, userCreateRequest.Password, indexName, roleType, ctx)
+		bp.createOrUpdateUser(username, userCreateRequest.Password, dbName, roleType, ctx)
 	if err != nil {
 		return nil, err
 	}
-	if indexName != "" {
-		resources = append(resources, dao.DbResource{Kind: common.IndexKind, Name: indexName})
+	if dbName != "" {
+		resources = append(resources, dao.DbResource{Kind: common.MetadataKind, Name: dbName})
+		resources = append(resources, dao.DbResource{Kind: common.ResourcePrefixKind, Name: dbName})
 	}
-	connectionProperties := bp.GetExtendedConnectionProperties(indexName, username, password, "", roleType)
+	connectionProperties := bp.GetExtendedConnectionProperties("", username, password, "", roleType)
 	user, err := bp.GetUser(username)
 	if err != nil {
 		return nil, err
@@ -125,7 +126,7 @@ func (bp BaseProvider) ensureUser(username string, userCreateRequest dao.UserCre
 
 	response := &CreatedUser{
 		ConnectionProperties: connectionProperties,
-		Name:                 indexName,
+		Name:                 dbName,
 		Resources:            resources,
 	}
 	return response, nil

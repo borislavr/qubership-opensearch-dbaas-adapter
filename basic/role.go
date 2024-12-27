@@ -143,6 +143,7 @@ func (bp BaseProvider) CreateRoleWithDMLPermissions() error {
 		ClusterScrollClearPermission,
 		ClusterMonitorTaskGetPermission,
 		ClusterMonitorStatePermission,
+		ClusterMonitorMainPermission,
 	}
 	return bp.createRole(clusterPermissions, indexPermissions, []string{}, DmlRoleType)
 }
@@ -161,6 +162,7 @@ func (bp BaseProvider) CreateRoleWithReadOnlyPermissions() error {
 		strings.ToUpper(ClusterReadOnlyPermissions),
 		ClusterScrollClearPermission,
 		ClusterMonitorStatePermission,
+		ClusterMonitorMainPermission,
 	}
 	return bp.createRole(clusterPermissions, indexPermissions, []string{}, ReadOnlyRoleType)
 }

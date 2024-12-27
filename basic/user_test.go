@@ -15,7 +15,6 @@
 package basic
 
 import (
-	"fmt"
 	"github.com/Netcracker/dbaas-opensearch-adapter/common"
 	"github.com/Netcracker/qubership-dbaas-adapter-core/pkg/dao"
 	"github.com/stretchr/testify/assert"
@@ -32,15 +31,16 @@ func TestUpdateUserWithDbNameAndPassword(t *testing.T) {
 	assert.Empty(t, err)
 	assert.Equal(t, username, response.ConnectionProperties.ResourcePrefix)
 	assert.Equal(t, userCreateRequest.DbName, response.Name)
-	assert.Equal(t, userCreateRequest.DbName, response.ConnectionProperties.DbName)
-	expectedUrl := fmt.Sprintf("http://localhost:9200/%s", userCreateRequest.DbName)
+	assert.Equal(t, "", response.ConnectionProperties.DbName)
+	expectedUrl := "http://localhost:9200/"
 	assert.Equal(t, expectedUrl, response.ConnectionProperties.Url)
 	assert.Equal(t, username, response.ConnectionProperties.Username)
 	assert.Equal(t, userCreateRequest.Password, response.ConnectionProperties.Password)
 	assert.Equal(t, AdminRoleType, response.ConnectionProperties.Role)
 	expectedResources := []dao.DbResource{
 		{Kind: common.UserKind, Name: username},
-		{Kind: common.IndexKind, Name: userCreateRequest.DbName},
+		{Kind: common.MetadataKind, Name: userCreateRequest.DbName},
+		{Kind: common.ResourcePrefixKind, Name: userCreateRequest.DbName},
 	}
 	assert.ElementsMatch(t, expectedResources, response.Resources)
 }
@@ -54,15 +54,16 @@ func TestCreateUserWithoutUsername(t *testing.T) {
 	assert.Empty(t, err)
 	assert.Empty(t, response.ConnectionProperties.ResourcePrefix)
 	assert.Equal(t, userCreateRequest.DbName, response.Name)
-	assert.Equal(t, userCreateRequest.DbName, response.ConnectionProperties.DbName)
-	expectedUrl := fmt.Sprintf("http://localhost:9200/%s", userCreateRequest.DbName)
+	assert.Equal(t, "", response.ConnectionProperties.DbName)
+	expectedUrl := "http://localhost:9200/"
 	assert.Equal(t, expectedUrl, response.ConnectionProperties.Url)
 	assert.Contains(t, response.ConnectionProperties.Username, "dbaas_")
 	assert.Equal(t, userCreateRequest.Password, response.ConnectionProperties.Password)
 	assert.Equal(t, AdminRoleType, response.ConnectionProperties.Role)
 	expectedResources := []dao.DbResource{
 		{Kind: common.UserKind, Name: response.ConnectionProperties.Username},
-		{Kind: common.IndexKind, Name: userCreateRequest.DbName},
+		{Kind: common.MetadataKind, Name: userCreateRequest.DbName},
+		{Kind: common.ResourcePrefixKind, Name: userCreateRequest.DbName},
 	}
 	assert.ElementsMatch(t, expectedResources, response.Resources)
 }
@@ -76,15 +77,16 @@ func TestUpdateUserWithDbName(t *testing.T) {
 	assert.Empty(t, err)
 	assert.Equal(t, username, response.ConnectionProperties.ResourcePrefix)
 	assert.Equal(t, userCreateRequest.DbName, response.Name)
-	assert.Equal(t, userCreateRequest.DbName, response.ConnectionProperties.DbName)
-	expectedUrl := fmt.Sprintf("http://localhost:9200/%s", userCreateRequest.DbName)
+	assert.Equal(t, "", response.ConnectionProperties.DbName)
+	expectedUrl := "http://localhost:9200/"
 	assert.Equal(t, expectedUrl, response.ConnectionProperties.Url)
 	assert.Equal(t, username, response.ConnectionProperties.Username)
 	assert.NotEmpty(t, response.ConnectionProperties.Password)
 	assert.Equal(t, AdminRoleType, response.ConnectionProperties.Role)
 	expectedResources := []dao.DbResource{
 		{Kind: common.UserKind, Name: username},
-		{Kind: common.IndexKind, Name: userCreateRequest.DbName},
+		{Kind: common.MetadataKind, Name: userCreateRequest.DbName},
+		{Kind: common.ResourcePrefixKind, Name: userCreateRequest.DbName},
 	}
 	assert.ElementsMatch(t, expectedResources, response.Resources)
 }

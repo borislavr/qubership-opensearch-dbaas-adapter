@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Netcracker/dbaas-opensearch-adapter/api"
 	"io"
 	"io/fs"
 	"log"
@@ -56,6 +57,7 @@ const (
 
 var logger = GetLogger()
 var BasePath = GetBasePath()
+var resourcePrefixAttributeName = "resource_prefix"
 
 type Component struct {
 	Address     string        `json:"address"`
@@ -87,6 +89,12 @@ type Supports struct {
 type CustomLogHandler struct {
 	slog.Handler
 	l *log.Logger
+}
+
+type User struct {
+	Attributes map[string]string `json:"attributes,omitempty"`
+	Hash       string            `json:"hash"`
+	Roles      []string          `json:"backend_roles"`
 }
 
 func GetBasePath() string {
@@ -204,4 +212,34 @@ func PrepareContext(r *http.Request) context.Context {
 		return context.WithValue(r.Context(), RequestIdKey, GenerateUUID())
 	}
 	return context.WithValue(r.Context(), RequestIdKey, requestId)
+}
+
+func CheckPrefixUniqueness(prefix string, ctx context.Context, opensearchcli Client) (bool, error) {
+	logger.InfoContext(ctx, "Checking user prefix uniqueness during restoration with renaming")
+	getUsersRequest := api.GetUsersRequest{}
+	response, err := getUsersRequest.Do(context.Background(), opensearchcli)
+	if err != nil {
+		return false, fmt.Errorf("failed to receive users: %+v", err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode == http.StatusOK {
+		var users map[string]User
+		err = ProcessBody(response.Body, &users)
+		if err != nil {
+			return false, err
+		}
+		for element, user := range users {
+			if strings.HasPrefix(element, prefix) {
+				logger.ErrorContext(ctx, fmt.Sprintf("provided prefix already exists or a part of another prefix: %+v", prefix))
+				return false, fmt.Errorf("provided prefix already exists or a part of another prefix: %+v", prefix)
+			}
+			if user.Attributes[resourcePrefixAttributeName] != "" && strings.HasPrefix(user.Attributes[resourcePrefixAttributeName], prefix) {
+				logger.ErrorContext(ctx, fmt.Sprintf("provided prefix already exists or a part of another prefix: %+v", prefix))
+				return false, fmt.Errorf("provided prefix already exists or a part of another prefix: %+v", prefix)
+			}
+		}
+	} else if response.StatusCode == http.StatusNotFound {
+		return true, nil
+	}
+	return true, nil
 }

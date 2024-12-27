@@ -326,6 +326,18 @@ func (bp BaseProvider) createDatabase(requestOnCreateDb DbCreateRequest, ctx con
 		}
 	}
 
+	if ok, err := common.CheckPrefixUniqueness(prefix, ctx, bp.opensearch.Client); !ok {
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if ok, err := common.CheckPrefixUniqueness(prefix, ctx, bp.opensearch.Client); !ok {
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	resourcesToCreate := requestOnCreateDb.Settings.CreateOnly
 	if len(resourcesToCreate) == 0 {
 		resourcesToCreate = []string{common.UserKind, common.IndexKind}
