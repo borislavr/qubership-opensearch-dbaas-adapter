@@ -43,18 +43,19 @@ var (
 	dbaasAggregatorRegistrationRetryDelay = common.GetIntEnv("DBAAS_AGGREGATOR_REGISTRATION_RETRY_DELAY_MS", 5000)
 	dbaasAggregatorPhysicalDatabaseId     = common.GetEnv("DBAAS_AGGREGATOR_PHYSICAL_DATABASE_IDENTIFIER", "unknown_opensearch")
 
-	opensearchHost     = common.GetEnv("OPENSEARCH_HOST", "localhost")
-	opensearchPort     = common.GetIntEnv("OPENSEARCH_PORT", 9200)
-	opensearchProtocol = common.GetEnv("OPENSEARCH_PROTOCOL", common.Http)
-	opensearchUsername = common.GetEnv("OPENSEARCH_USERNAME", "opensearch")
-	opensearchPassword = common.GetEnv("OPENSEARCH_PASSWORD", "change")
-	opensearchRepo     = common.GetEnv("OPENSEARCH_REPO", "dbaas-backups-repository")
-	opensearchRepoRoot = common.GetEnv("OPENSEARCH_REPO_ROOT", "/usr/share/opensearch/")
-
+	opensearchHost                   = common.GetEnv("OPENSEARCH_HOST", "localhost")
+	opensearchPort                   = common.GetIntEnv("OPENSEARCH_PORT", 9200)
+	opensearchProtocol               = common.GetEnv("OPENSEARCH_PROTOCOL", common.Http)
+	opensearchUsername               = common.GetEnv("OPENSEARCH_USERNAME", "opensearch")
+	opensearchPassword               = common.GetEnv("OPENSEARCH_PASSWORD", "change")
+	opensearchRepo                   = common.GetEnv("OPENSEARCH_REPO", "dbaas-backups-repository")
+	opensearchRepoRoot               = common.GetEnv("OPENSEARCH_REPO_ROOT", "/usr/share/opensearch/")
 	enhancedSecurityPluginEnabled, _ = strconv.ParseBool(common.GetEnv("ENHANCED_SECURITY_PLUGIN_ENABLED", "false"))
 
 	labelsFilename    = common.GetEnv("LABELS_FILE_LOCATION_NAME", "dbaas.physical_databases.registration.labels.json")
 	labelsLocationDir = common.GetEnv("LABELS_FILE_LOCATION_DIR", "/app/config/")
+
+	registrationEnabled, _ = strconv.ParseBool(common.GetEnv("REGISTRATION_ENABLED", "false"))
 )
 
 const certificatesFolder = "/tls"
@@ -214,7 +215,9 @@ func startRegistration(adapterAddress string, adapterUsername string, adapterPas
 		adapterCredentials,
 		baseProvider,
 	)
-	registrationService.StartRegistration()
+	if registrationEnabled {
+		registrationService.StartRegistration()
+	}
 	return registrationService
 }
 
