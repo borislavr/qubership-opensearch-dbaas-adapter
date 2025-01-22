@@ -1,4 +1,8 @@
-FROM golang:1.22.5-alpine3.20 as builder
+# Note: this uses host platform for the build, and we ask go build to target the needed platform, so we do not spend time on qemu emulation when running "go build"
+FROM --platform=$BUILDPLATFORM golang:1.22.5-alpine3.20 as builder
+ARG BUILDPLATFORM
+ARG TARGETOS
+ARG TARGETARCH
 
 ENV GOPRIVATE=github.com/Netcracker \
     GOSUMDB=off \
@@ -38,7 +42,7 @@ RUN go mod tidy
 RUN go test -v ./...
 
 #RUN go test -v ./adapter...
-RUN GOOS=linux GOARCH=amd64 go build -a -o main cmd/main.go
+RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -a -o main cmd/main.go
 
 FROM scratch
 COPY --from=builder /workspace/main /bin/sh
