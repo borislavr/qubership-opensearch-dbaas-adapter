@@ -1,3 +1,5 @@
+---
+
 name: license-check
 on:
   push:
@@ -45,9 +47,9 @@ jobs:
 
       - name: Check License
         run: |
-          go get -t ${MODULE}/...
+          go get -t ${MODULE}/... || true
           go mod vendor -e | grep "go get" | awk '{print $3}' | xargs -n1 go get
           go mod vendor
           which wwhrd || go install github.com/frapposelli/wwhrd@latest
-          wwhrd check -f .wwhrd.yml
+          wwhrd check -f ${{ github.workspace }}/.wwhrd.yml
         working-directory: "${{ github.workspace }}/${{ env.GO_MOD_DIR }}"
