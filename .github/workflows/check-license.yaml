@@ -1,55 +1,9 @@
 ---
 
-name: license-check
-on:
-  push:
-    paths:
-      - 'vendor'
-  pull_request:
-    paths:
-      - 'vendor'
-  workflow_dispatch:
+  name: Check Go Modules Licenses
+  on:
+    push:
 
-permissions:
-  contents: read
-
-jobs:
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Code checkout
-        uses: actions/checkout@master
-
-      - name: Find go.mod files
-        id: find
-        run: |
-          GO_MOD_FILE=$(find . -name go.mod | head -n 1)
-          if [ -f ${GO_MOD_FILE} ]; then
-            echo "GO_MOD_FILE=${GO_MOD_FILE}" >> $GITHUB_ENV
-            echo "GO_MOD_DIR=$(dirname ${GO_MOD_FILE})" >> $GITHUB_ENV
-            MODULE=$(cat ${GO_MOD_FILE} | grep module | awk '{print $2}')
-            echo "MODULE=${MODULE}" >> $GITHUB_ENV
-          else
-            echo "No go.mod file found"
-            exit 1
-          fi
-        shell: bash
-
-      - name: Setup Go
-        id: go
-        uses: actions/setup-go@v5
-        with:
-          go-version: stable
-          cache: false
-          cache-dependency-path: "**/*.sum"
-          go-version-file: "${{ env.GO_MOD_FILE }}"
-
-      - name: Check License
-        run: |
-          go get -t ${MODULE}/... || true
-          go mod vendor -e | grep "go get" | awk '{print $3}' | xargs -n1 go get
-          go mod vendor
-          which wwhrd || go install github.com/frapposelli/wwhrd@latest
-          wwhrd check -f ${{ github.workspace }}/.wwhrd.yml
-        working-directory: "${{ github.workspace }}/${{ env.GO_MOD_DIR }}"
+  jobs:
+    check-license:
+      uses: Netcracker/qubership-workflow-hub/.github/workflows/go-check-license.yaml@main
